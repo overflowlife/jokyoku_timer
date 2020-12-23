@@ -1,30 +1,42 @@
 #python 3.9
 #coding: UTF-8(cp65001)
+#developer: twitter@overflowlife
 import cv2
 import pyautogui
 import time
 import tkinter as tk
 from threading import Thread
 import winsound
+import configparser
 
 
 #History
 #me: 127('20/10/12)
+#me: 132('20/12/24)
 #belu: 118 ('20/10/14)
-
-######### Setting
-timeOverture = 127
-
-## internal setting
-UseImg = 'Canny' #2値化後エッジ抽出
-#UseImg = 'Binary' #2値化
-
-cannyMinVal = 600
-cannyMaxVal = 600
 
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
+        ######### Setting
+        inifile = configparser.ConfigParser()
+        inifile.read('./jokyoku.ini','UTF-8' )
+        self.username = ''
+        self.username = inifile.get('general', 'username')
+        self.timeOverture = 120
+        self.timeOverture = int(inifile.get('general', 'jokyokutime'))
+        self.searchDelay = 1.0
+        self.searchDelay = float(inifile.get('general', 'searchinterval'))
+
+        self.UseImg = 'Canny'
+        self.UseImg = inifile.get('filter', 'processor')
+
+        self.cannyMinVal = 600
+        self.cannyMinVal = int(inifile.get('filter', 'cannyMinVal'))
+        self.cannyMaxVal = 600
+        self.cannyMaxVal = int(inifile.get('filter', 'cannyMaxVal'))
+    
 
         self.resetToken = False
 
@@ -40,7 +52,7 @@ class Application(tk.Frame):
         musicImgGray = cv2.cvtColor(musicImg, cv2.COLOR_BGR2GRAY)
         cv2.imwrite('tmp_musicImgGray.png', musicImgGray)
         binret, self.musicImgBinary = cv2.threshold(musicImgGray, 247, 255, cv2.THRESH_BINARY)
-        self.musicImgCanny = cv2.Canny(self.musicImgBinary, cannyMinVal, cannyMaxVal)
+        self.musicImgCanny = cv2.Canny(self.musicImgBinary, self.cannyMinVal, self.cannyMaxVal)
         cv2.imwrite('tmp_musicImgBinary.png', self.musicImgBinary)
         cv2.imwrite('tmp_musicImgCanny.png', self.musicImgCanny)
         self.musicH, self.musicW = musicImg.shape[:-1]
@@ -50,7 +62,7 @@ class Application(tk.Frame):
         playerImgGray = cv2.cvtColor(playerImg, cv2.COLOR_BGR2GRAY)
         cv2.imwrite('tmp_playerImgGray.png', playerImgGray)
         binret, self.playerImgBinary = cv2.threshold(playerImgGray, 247, 255, cv2.THRESH_BINARY)
-        self.playerImgCanny = cv2.Canny(self.playerImgBinary, cannyMinVal, cannyMaxVal)
+        self.playerImgCanny = cv2.Canny(self.playerImgBinary, self.cannyMinVal, self.cannyMaxVal)
         cv2.imwrite('tmp_playerImgBinary.png', self.playerImgBinary)
         cv2.imwrite('tmp_playerImgCanny.png', self.playerImgCanny)
         self.playerH, self.playerW = playerImg.shape[:-1]
@@ -84,7 +96,7 @@ class Application(tk.Frame):
                     print('Normal mode countdown start!')
                     p = Thread(target=self.countDown)
                     p.start()
-            time.sleep(1.0)
+            time.sleep(self.searchDelay)
         
     def SearchForMusic(self):
         #キャプチャ取得、クリッピング、2値化
@@ -96,12 +108,12 @@ class Application(tk.Frame):
         captureClippedGray = cv2.cvtColor(captureClipped, cv2.COLOR_BGR2GRAY)
         cv2.imwrite('tmp_captureClippedGray.png', captureClippedGray)
         binret, captureClippedBinary = cv2.threshold(captureClippedGray, 247, 255, cv2.THRESH_BINARY)
-        captureClippedCanny = cv2.Canny(captureClippedBinary, cannyMinVal, cannyMaxVal)
+        captureClippedCanny = cv2.Canny(captureClippedBinary, self.cannyMinVal, self.cannyMaxVal)
         cv2.imwrite('tmp_captureClippedCanny.png', captureClippedCanny)
         cv2.imwrite('tmp_captureClippedBinary.png', captureClippedBinary)
 
         #類似度の検索
-        if(UseImg == 'Canny'):
+        if(self.UseImg == 'Canny'):
             musicImgForJudge = self.musicImgCanny
             playerImgForJudge = self.playerImgCanny
             captureClippedForJudge = captureClippedCanny
@@ -144,20 +156,20 @@ class Application(tk.Frame):
 
     def countDownTuan(self):
         self.isCountDown = True
-        timeInitial = timeOverture * 3
+        timeInitial = self.timeOverture * 3
         timeRemaining = timeInitial
-        while(timeRemaining > timeOverture * 2):
+        while(timeRemaining > self.timeOverture * 2):
             if(self.resetToken):
                 self.reset()
                 return
             timeElapsed = time.time() - self.startTime
             timeRemaining = timeInitial - timeElapsed
 
-            if(timeRemaining < timeOverture * 2 +5 and timeRemaining > timeOverture * 2):
+            if(timeRemaining < self.timeOverture * 2 +5 and timeRemaining > self.timeOverture * 2):
                 freq = 440 # Set frequency To 2500 Hertz
                 dur = 400 # Set duration To 1000 ms == 1 second
                 winsound.Beep(freq, dur)     
-            self.timerText.set('ready for Tuan: ' + str(int(timeRemaining - timeOverture * 2)))
+            self.timerText.set('ready for Tuan: ' + str(int(timeRemaining - self.timeOverture * 2)))
             time.sleep(0.2)
 
         freq = 880 # Set frequency To 2500 Hertz
@@ -183,7 +195,7 @@ class Application(tk.Frame):
 
     def countDown(self):
         self.isCountDown = True
-        timeInitial = timeOverture
+        timeInitial = self.timeOverture
         timeRemaining = timeInitial
         while(timeRemaining > 0):
             if(self.resetToken):
@@ -224,7 +236,7 @@ class Application(tk.Frame):
         self.stateLabel = tk.Label(self, textvariable=self.labelText)
         self.stateLabel.pack()
         self.timerText = tk.StringVar()
-        self.timerText.set('...')
+        self.timerText.set(self.username + '(' + str(self.timeOverture) + 'sec)')
         self.timerLabel = tk.Label(self, textvariable=self.timerText)
         self.timerLabel.pack()
 
