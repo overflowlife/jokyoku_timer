@@ -83,21 +83,22 @@ class Application(tk.Frame):
         self.isCountDown = False
         cnt = 1
         while True:
-            cnt = cnt+1
-            print('I am watching' + str(cnt))
-            if(self.SearchForMusic() and not self.isCountDown):
-                self.startTime = time.time()
-                freq = 220 # Set frequency To 2500 Hertz
-                dur = 200 # Set duration To 1000 ms == 1 second
-                winsound.Beep(freq, dur)
-                if(self.tuanBool.get()):
-                    print('Tuan mode countdown start!')
-                    p = Thread(target=self.countDownTuan)
-                    p.start()
-                else:
-                    print('Normal mode countdown start!')
-                    p = Thread(target=self.countDown)
-                    p.start()
+            if(not self.isCountDown):
+                cnt = cnt+1
+                print('I am watching' + str(cnt))
+                if(self.SearchForMusic()):
+                    self.startTime = time.time()
+                    freq = 220 # Set frequency To 2500 Hertz
+                    dur = 200 # Set duration To 1000 ms == 1 second
+                    Thread(target=winsound.Beep, args=(freq, dur)).start()
+                    if(self.tuanBool.get()):
+                        print('Tuan mode countdown start!')
+                        p = Thread(target=self.countDownTuan)
+                        p.start()
+                    else:
+                        print('Normal mode countdown start!')
+                        p = Thread(target=self.countDown)
+                        p.start()
             time.sleep(self.searchDelay)
         
     def SearchForMusic(self):
@@ -170,13 +171,13 @@ class Application(tk.Frame):
             if(timeRemaining < self.timeOverture * 2 +5 and timeRemaining > self.timeOverture * 2):
                 freq = 440 # Set frequency To 2500 Hertz
                 dur = 400 # Set duration To 1000 ms == 1 second
-                winsound.Beep(freq, dur)     
+                Thread(target=winsound.Beep, args=(freq, dur)).start()  
             self.timerText.set('ready for Tuan: ' + str(int(timeRemaining - self.timeOverture * 2)))
-            time.sleep(0.2)
+            time.sleep(1.0)
 
         freq = 880 # Set frequency To 2500 Hertz
         dur = 600 # Set duration To 1000 ms == 1 second
-        winsound.Beep(freq, dur)  
+        Thread(target=winsound.Beep, args=(freq, dur)).start() 
 
         while(timeRemaining > 0):
             if(self.resetToken):
@@ -188,7 +189,7 @@ class Application(tk.Frame):
             if(timeRemaining < 10 and timeRemaining > 0):
                 freq = 1760 # Set frequency To 2500 Hertz
                 dur = 400 # Set duration To 1000 ms == 1 second
-                winsound.Beep(freq, dur)     
+                Thread(target=winsound.Beep, args=(freq, dur)).start()  
             self.timerText.set('overture remaining: ' + str(int(timeRemaining)))
             time.sleep(1.0)
 
@@ -209,7 +210,7 @@ class Application(tk.Frame):
             if(timeRemaining < 10):
                 freq = 1760 # Set frequency To 2500 Hertz
                 dur = 400 # Set duration To 1000 ms == 1 second
-                winsound.Beep(freq, dur)
+                Thread(target=winsound.Beep, args=(freq, dur)).start()
 
             self.timerText.set('overture remaining:' + str(int(timeRemaining)))
             time.sleep(1.0)
