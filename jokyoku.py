@@ -20,23 +20,25 @@ class Application(tk.Frame):
         super().__init__(master)
 
         ######### Setting
-        inifile = configparser.ConfigParser()
-        inifile.read('./jokyoku.ini','UTF-8' )
         self.username = ''
-        self.username = inifile.get('general', 'username')
         self.timeOverture = 120
-        self.timeOverture = int(inifile.get('general', 'jokyokutime'))
         self.searchDelay = 1.0
-        self.searchDelay = float(inifile.get('general', 'searchinterval'))
-
         self.UseImg = 'Canny'
-        self.UseImg = inifile.get('filter', 'processor')
-
         self.cannyMinVal = 600
-        self.cannyMinVal = int(inifile.get('filter', 'cannyMinVal'))
         self.cannyMaxVal = 600
-        self.cannyMaxVal = int(inifile.get('filter', 'cannyMaxVal'))
-    
+        try:
+            inifile = configparser.ConfigParser()
+            inifile.read('./jokyoku.ini','UTF-8' )
+            self.username = inifile.get('general', 'username')
+            self.timeOverture = int(inifile.get('general', 'jokyokutime'))
+            self.searchDelay = float(inifile.get('general', 'searchinterval'))
+            self.UseImg = inifile.get('filter', 'processor')
+
+            self.cannyMinVal = int(inifile.get('filter', 'cannyMinVal'))
+            self.cannyMaxVal = int(inifile.get('filter', 'cannyMaxVal'))
+        except:
+            print('config read error.')
+
 
         self.resetToken = False
 
